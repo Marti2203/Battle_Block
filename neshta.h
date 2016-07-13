@@ -59,7 +59,7 @@ struct Waypoint:RenderedEntity
     }
     virtual void Update(sf::RenderWindow& window)
     {
-        if(visited==0)
+        if(!visited)
         {
             window.draw(square);
         }
