@@ -243,7 +243,7 @@ int main()
     {
         for(int j=0;j<30;j++)
         {
-            if(Map[i][j]!=0){
+            if(Map[i][j]){
             fail<<i<<" "<<j<<" "<<Map[i][j]<<endl;
             }
         }
