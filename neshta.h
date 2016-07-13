@@ -12,7 +12,7 @@ enum EntityType
     Bullet_type,Turret_type,Turret_x_type,
     Turret_y_type,Platform_type,Up_Down_type,
     Left_Right_type,Mapi_type,Hazard_type,
-    Player_type,Bomb_type
+    Player_type,Bomb_type,Boom_Type
 };
 
 struct Entity
@@ -267,10 +267,9 @@ struct Player: Entity
     }
 };
 
-struct Boom
+struct Boom:Entity
 {
-    int x;
-    int y;
+    EntityType type=EntityType::Boom_type;
     int fuse;
     Boom(int a,int b ,int c)
     {
