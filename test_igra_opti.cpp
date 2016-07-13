@@ -24,17 +24,20 @@ bool if_hit()
 {
     for(int i=0;i<Entities.size();i++)
     {
-        if(igrach.x<Entities[i]->x+20 && igrach.x>Entities[i]->x-igrach.sizee && igrach.y<Entities[i]->y+20 && igrach.y>Entities[i]->y-igrach.sizee && Entities[i]->type==EntityType::Waypoint_type && Entities[i]->visited == 0)
+        if(igrach.x<Entities[i]->x+20 && igrach.x>Entities[i]->x-igrach.sizee && igrach.y<Entities[i]->y+20 && igrach.y>Entities[i]->y-igrach.sizee && Entities[i]->visited == 0)
         {
-            Entities[i]->visited=1;
-            checkpoint_x=Entities[i]->x;
-            checkpoint_y=Entities[i]->y;
-        }
-        if(igrach.x<Entities[i]->x+20 && igrach.x>Entities[i]->x-igrach.sizee && igrach.y<Entities[i]->y+20 && igrach.y>Entities[i]->y-igrach.sizee && Entities[i]->type==EntityType::Bomb_type && Entities[i]->visited == 0)
-        {
-            Boom k(Entities[i]->x,Entities[i]->y,300);
-            Gurmene.push(k);
-            return false;
+        	if(Entities[i]->type==EntityType::Waypoint_type)
+        	{
+        	Entities[i]->visited=1;
+            	checkpoint_x=Entities[i]->x;
+            	checkpoint_y=Entities[i]->y;	
+        	}
+		if(Entities[i]->type==EntityType::Bomb_type )
+		{
+		Boom k(Entities[i]->x,Entities[i]->y,300);
+            	Gurmene.push(k);
+            	return false;
+		}
         }
         if(igrach.x<Entities[i]->x+Entities[i]->sizee && igrach.x>Entities[i]->x-igrach.sizee && igrach.y<Entities[i]->y+Entities[i]->sizee && igrach.y>Entities[i]->y-igrach.sizee && Entities[i]->type!=EntityType::Waypoint_type && Entities[i]->type!=EntityType::Bomb_type)
         {
