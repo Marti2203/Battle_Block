@@ -1,10 +1,25 @@
 #include <iostream>
 #include <fstream>
+#include <queue>
 #include <vector>
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
-
+#include <windows.h>
+#include <string>
 using namespace std;
+using namespace sf;
+
+struct RectangleWrapper : public RectangleShape {
+	RectangleWrapper(Vector2f& vector) :RectangleShape(vector) {
+
+	}
+	RectangleWrapper() :RectangleShape(Vector2f(0, 0)) {
+
+	}
+	void setPosition(float x, float y) {
+		RectangleShape::setPosition(x * 20, y * 20);
+	}
+};
 
 enum EntityType
 {
@@ -17,9 +32,22 @@ enum EntityType
 
 struct Entity
 {
-    int x;
-    int y;
-    int sizee;
+    float x;
+	float y;
+	int sizee;
+
+	int getX() {
+		return x / 20;
+	}
+	int getY() {
+		return y / 20;
+	}
+	void setX(float x) {
+		this->x = x * 20;
+	}
+	void setY(float y) {
+		this->y = y * 20;
+	}
     EntityType type=EntityType::Entity_type;
 };
 
@@ -27,18 +55,23 @@ struct RenderedEntity:Entity
 {
     int visited = 0;
     int nakude;
-    int nakude_x=0;
-    int nakude_y=0;
+    int nakude_x=0,nakude_y=0;
     int cooldown;
+    int fuse=-10;
     int kolko_da_e_cooldowna=700;
-    EntityType type;
-    virtual void Update(sf::RenderWindow& window)=0;
-    sf::RectangleShape square;
+    virtual void Update(RenderWindow& window)=0;
+    RectangleWrapper square;
+	RenderedEntity() {
+		type = EntityType::RenderedEntity_type;
+	}
     ~RenderedEntity(){};
 };
 struct Platform:RenderedEntity
 {
-    void Update(sf::RenderWindow& window)
+	Platform() {
+		type = EntityType::Platform_type;
+	}
+    void Update(RenderWindow& window)
     {
 
     };
@@ -47,17 +80,17 @@ struct Platform:RenderedEntity
 
 struct Waypoint:RenderedEntity
 {
-    EntityType type=EntityType::Waypoint_type;
-    Waypoint(int a,int b)
+    Waypoint(float a,float b)
     {
-        square.setSize(sf::Vector2f(20,20));
-        square.setFillColor(sf::Color(45,153,23));
+		type = EntityType::Waypoint_type;
+        square.setSize(Vector2f(20,20));
+        square.setFillColor(Color(45,153,23));
         square.setPosition(a,b);
         x=a;
         y=b;
         sizee=20;
     }
-    virtual void Update(sf::RenderWindow& window)
+    virtual void Update(RenderWindow& window)
     {
         if(visited==0)
         {
@@ -66,21 +99,19 @@ struct Waypoint:RenderedEntity
     }
 };
 
-struct Bullet
+struct Bullet:RenderedEntity
 {
-    int x;
-    int y;
-    sf::RectangleShape square;
     int nakude_x;
     int nakude_y;
-    EntityType type=EntityType::Bullet_type;
     int ot_koy;
     int ot_koy2;
     int sizee=3;
-    Bullet(int a, int b, int c, int d,int e,int f)
+	Bullet(){}
+    Bullet(float a, float b, int c, int d,int e,int f)
     {
-        square.setSize(sf::Vector2f(3,3));
-        square.setFillColor(sf::Color::Red);
+		type = EntityType::Bullet_type;
+        square.setSize(Vector2f(3,3));
+        square.setFillColor(Color::Red);
         square.setPosition(a,b);
         x=a;
         y=b;
@@ -89,7 +120,7 @@ struct Bullet
         ot_koy=e;
         ot_koy2=f;
     }
-    virtual void Update(sf::RenderWindow& window)
+    virtual void Update(RenderWindow& window)
     {
         square.setPosition(x,y);
         window.draw(square);
@@ -98,25 +129,25 @@ struct Bullet
 
 struct Turret:RenderedEntity
 {
-    EntityType type=EntityType::Turret_type;
-    void Update(sf::RenderWindow& window){};
+	Turret() { type = EntityType::Turret_type; }
+    void Update(RenderWindow& window){};
     ~Turret(){};
 };
 
 struct Turret_x:Turret
 {
-    EntityType type=EntityType::Turret_x_type;
-    Turret_x(int a,int b,int c)
+    Turret_x(float a,float b)
     {
-        square.setSize(sf::Vector2f(20,20));
-        square.setFillColor(sf::Color::White);
+		type = EntityType::Turret_x_type;
+        square.setSize(Vector2f(20,20));
+        square.setFillColor(Color::White);
         square.setPosition(a,b);
         x=a;
         y=b;
         nakude=1;
         sizee=20;
     }
-    void Update(sf::RenderWindow& window)
+    void Update(RenderWindow& window)
     {
         if(cooldown>0)
         {
@@ -128,18 +159,18 @@ struct Turret_x:Turret
 
 struct Turret_y:Turret
 {
-    EntityType type=EntityType::Turret_y_type;
-    Turret_y(int a,int b,int c)
-    {
-        square.setSize(sf::Vector2f(20,20));
-        square.setFillColor(sf::Color::Green);
+    Turret_y(float a,float b)
+	{
+		type = EntityType::Turret_y_type;
+        square.setSize(Vector2f(20,20));
+        square.setFillColor(Color::Green);
         square.setPosition(a,b);
         x=a;
         y=b;
         nakude=1;
         sizee=20;
     }
-    void Update(sf::RenderWindow& window)
+    void Update(RenderWindow& window)
     {
         if(cooldown>0)
         {
@@ -151,18 +182,18 @@ struct Turret_y:Turret
 
 struct Up_Down:Platform
 {
-    EntityType type=EntityType::Up_Down_type;
-    Up_Down(int a , int b , int c)
+    Up_Down(float a , float b , int c)
     {
-        square.setSize(sf::Vector2f(20,20));
-        square.setFillColor(sf::Color::Blue);
+		type = EntityType::Up_Down_type;
+        square.setSize(Vector2f(20,20));
+        square.setFillColor(Color::Blue);
         square.setPosition(a,b);
         x=a;
         y=b;
         nakude_y=c;
         sizee=20;
     }
-    void Update(sf::RenderWindow& window)
+    void Update(RenderWindow& window)
     {
         square.setPosition(x,y);
         window.draw(square);
@@ -171,18 +202,18 @@ struct Up_Down:Platform
 
 struct Left_Right:Platform
 {
-    EntityType type=EntityType::Left_Right_type;
-    Left_Right(int a , int b , int c)
+    Left_Right(float a , float b , int c)
     {
-        square.setSize(sf::Vector2f(20,20));
-        square.setFillColor(sf::Color::Yellow);
+		type = EntityType::Left_Right_type;
+        square.setSize(Vector2f(20,20));
+        square.setFillColor(Color::Yellow);
         square.setPosition(a,b);
         x=a;
         y=b;
         nakude_x=c;
         sizee=20;
     }
-    void Update(sf::RenderWindow& window)
+    void Update(RenderWindow& window)
     {
         square.setPosition(x,y);
         window.draw(square);
@@ -191,18 +222,17 @@ struct Left_Right:Platform
 
 struct Mapi:RenderedEntity
 {
-    EntityType type=EntityType::Mapi_type;
-    Mapi(int a , int b)
+    Mapi(float a , float b)
     {
         type=EntityType::Mapi_type;
-        square.setSize(sf::Vector2f(20,20));
-        square.setFillColor(sf::Color::Red);
+        square.setSize(Vector2f(20,20));
+        square.setFillColor(Color::Red);
         square.setPosition(a,b);
         x=a;
         y=b;
         sizee=20;
     }
-    void Update(sf::RenderWindow& window)
+    void Update(RenderWindow& window)
     {
         window.draw(square);
     }
@@ -210,17 +240,17 @@ struct Mapi:RenderedEntity
 
 struct Hazard:RenderedEntity
 {
-    EntityType type=EntityType::Hazard_type;
-    Hazard(int a , int b)
+    Hazard(float a, float b)
     {
-        square.setSize(sf::Vector2f(20,20));
-        square.setFillColor(sf::Color(0,128,0));
+		type = EntityType::Hazard_type;
+        square.setSize(Vector2f(20,20));
+        square.setFillColor(Color(0,128,0));
         square.setPosition(x,y);
         x=a;
         y=b;
         sizee=15;
     }
-    void Update(sf::RenderWindow& window)
+    void Update(RenderWindow& window)
     {
         square.setPosition(x,y);
         window.draw(square);
@@ -229,11 +259,11 @@ struct Hazard:RenderedEntity
 
 struct Bomb:RenderedEntity
 {
-    EntityType type=EntityType::Bomb_type;
-    Bomb(int a , int b)
+    Bomb(float a, float b)
     {
-        square.setSize(sf::Vector2f(20,20));
-        square.setFillColor(sf::Color(102,0,204));
+		type = EntityType::Bomb_type;
+        square.setSize(Vector2f(20,20));
+        square.setFillColor(Color(102,0,204));
         square.setPosition(x,y);
         x=a;
         y=b;
@@ -242,7 +272,7 @@ struct Bomb:RenderedEntity
         kolko_da_e_cooldowna=1000;
         visited=0;
     }
-    void Update(sf::RenderWindow& window)
+    void Update(RenderWindow& window)
     {
         if(visited==0){
         square.setPosition(x,y);
@@ -257,62 +287,77 @@ struct Bomb:RenderedEntity
 
 struct Player: Entity
 {
-    EntityType type=EntityType::Player_type;
     int sizee=10;
     int life=300;
-    Player(int a,int b)
+    Player(float a,float b)
     {
+		type = EntityType::Player_type;
         x=a;
         y=b;
     }
 };
 
-struct Boom
+struct Imame
 {
-    int x;
-    int y;
-    int fuse;
-    Boom(int a,int b ,int c)
-    {
-        x=a;
-        y=b;
-        fuse=c;
-    }
+    bool Turret_x_ima=false;
+    bool Turret_y_ima=false;
+    bool Left_Right_ima=false;
+    bool Up_Down_ima=false;
 };
 
-void get_number(string line , int masiv[])
+
+void get_number(string& line , int* masiv)
 {
-    int space=0;
-    for(int i=0;i<(int)line.length();i++)
-    {
-        if(line.at(i)==' ')
-        {
-            space++;
-            continue;
-        }
-        masiv[space]=masiv[space]*10+line.at(i)-'0';
-    }
+	traverseline(0, line, 0, masiv);
+}
+
+void traverseline(int start,string& line,int space,int* masiv) {
+	if (start == line.length()) return;
+	if (line.at(start) == ' ')
+	{
+		space++;
+	}
+	masiv[space] = masiv[space] * 10 + line.at(start) - '0';
+	traverseline(start + 1,line, space, masiv);
 }
 
 vector<RenderedEntity*> GetOfType(vector<RenderedEntity*> entities,EntityType type)
 {
-    vector<RenderedEntity*> result;
-    for (int i=0;i<entities.size();i++)
-    {
-        if(entities[i]->type==type){
-            result.push_back(entities[i]);
-        }
-    }
-    return result;
+	return getoftype(entities, type, 0, vector<RenderedEntity*>());
 }
 
-int Get_Position(vector<RenderedEntity*> entities,EntityType type,int x,int y)
-{
-    for (int i=0;i<entities.size();i++)
-    {
-        if(entities[i]->type==type && entities[i]->x==x && entities[i]->y==y){
-            return i;
-        }
-    }
-    return 0;
+vector<RenderedEntity*> getoftype(vector<RenderedEntity*>& list,EntityType type,int index,vector<RenderedEntity*>& result) {
+	if (index == list.size()) return result;
+	if (list[index]->type == type)
+	{
+		result.push_back(list[index]);
+	}
+	return getoftype(list, type, index + 1, result);
 }
+
+int Get_Position(vector<RenderedEntity*>& entities,EntityType type,int x,int y)
+{
+	return getposition(entities, type, x, y, 0);
+}
+
+int getposition(vector<RenderedEntity*>& entities, EntityType type, int x, int y, int index) {
+	if (index == entities.size()) return 0;
+	if (entities[index]->type == type && entities[index]->x == x && entities[index]->y == y) {
+		return index;
+	}
+	return (entities, type, x, y, index + 1);
+}
+
+Color DrawColors[] = { 
+	Color::Red,
+	Color::Yellow,
+	Color::Blue,
+	Color::White,
+	Color::Green,
+	Color(0u, 128u, 0u),
+	Color(33u, 133u, 156u),
+	Color(123u, 6u, 9u),
+	Color(45u, 153u, 23u),
+	Color(102u, 0u, 204u),
+	Color(102u, 0u, 204u)
+};
