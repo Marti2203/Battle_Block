@@ -13,25 +13,6 @@ string jump="ok";
 int how_much = 0, cooldown = 0, cooldown2 = 0;
 int checkpoint_x = 1 * 20, checkpoint_y=28*20;
 
-
-bool if_hit()
-{
-	if (!hit_for(0, Entities.size()))
-		return false;
-	
-    if(igrach.x<end_x+20 && igrach.x>end_x-igrach.sizee && igrach.y<end_y+20 && igrach.y>end_y-igrach.sizee)
-    {
-        window.close();
-    }
-
-    return true;
-}
-bool hit_for (int start, int end) {
-	if (start == end) return true;
-	if (!do_hitcheck(start))
-		return false;
-	return hit_for(start + 1, end);
-}
 bool do_hitcheck(int i) {
 	if (igrach.x<Entities[i]->x + 20 && igrach.x>Entities[i]->x - igrach.sizee && igrach.y<Entities[i]->y + 20 && igrach.y>Entities[i]->y - igrach.sizee && Entities[i]->type == EntityType::Waypoint_type && Entities[i]->visited == 0)
 	{
@@ -56,6 +37,26 @@ bool do_hitcheck(int i) {
 	}
 	return false;
 }
+bool hit_for(int start, int end) {
+	if (start == end) return true;
+	if (!do_hitcheck(start))
+		return false;
+	return hit_for(start + 1, end);
+}
+bool if_hit()
+{
+	if (!hit_for(0, Entities.size()))
+		return false;
+	
+    if(igrach.x<end_x+20 && igrach.x>end_x-igrach.sizee && igrach.y<end_y+20 && igrach.y>end_y-igrach.sizee)
+    {
+        window.close();
+    }
+
+    return true;
+}
+
+
 
 bool playerCheck(int x,int y)
 {
@@ -66,12 +67,7 @@ bool playerCheck(int x,int y)
     return true;
 }
 
-bool if_hitfor(int start, int end, int x, int y, int g, EntityType type) {
-	if (start == end) return playerCheck(x, y);
-	if (!if_hitcheck(start, y, x, g, type)) return false;
-	return if_hitfor(start + 1, end, x, y, g, type);
-}
-bool if_hitcheck(int i,int y, int x,int g,EntityType type) {
+bool if_hitcheck(int i, int y, int x, int g, EntityType type) {
 	if (Entities[i]->type == EntityType::Waypoint_type) return true;
 	if (Entities[i]->type == EntityType::Bomb_type && Entities[i]->visited == 1) return true;
 	if (x<Entities[i]->x + 20 && x>Entities[i]->x - 20 && y<Entities[i]->y + 20 && y>Entities[i]->y - 20 && Entities[i]->type != type)
@@ -83,6 +79,12 @@ bool if_hitcheck(int i,int y, int x,int g,EntityType type) {
 		return false;
 	}
 }
+bool if_hitfor(int start, int end, int x, int y, int g, EntityType type) {
+	if (start == end) return playerCheck(x, y);
+	if (!if_hitcheck(start, y, x, g, type)) return false;
+	return if_hitfor(start + 1, end, x, y, g, type);
+}
+
 
 void draw_board()
 {
@@ -104,23 +106,7 @@ string choose_file()
     cin>>k;
     return k;
 }
-
-void initialize()
-{
-	string line=choose_file();
-    ifstream kray;
-    kray.open(line,ios::in);
-    int br=0;
-	useline(kray, line, br);
-    kray.close();
-}
-void useline(ifstream& kray, string& line,int& br) {
-	if (!getline(kray, line)) return;
-	initialiseswitch(line, br);
-	br++;
-	return useline(kray, line, br);
-}
-void initialiseswitch(string& line,int& br) {
+void initialiseswitch(string& line, int& br) {
 	int masiv[10] = { 0 };
 	masiv[3] = 1;
 	get_number(line, masiv);
@@ -166,7 +152,37 @@ void initialiseswitch(string& line,int& br) {
 		break;
 	}
 }
+void useline(ifstream& kray, string& line, int& br) {
+	if (!getline(kray, line)) return;
+	initialiseswitch(line, br);
+	br++;
+	return useline(kray, line, br);
+}
+void initialize()
+{
+	string line=choose_file();
+    ifstream kray;
+    kray.open(line,ios::in);
+    int br=0;
+	useline(kray, line, br);
+    kray.close();
+}
 
+void playernothit(int& init_x, int& init_y) {
+	int k = 0;
+	int k2 = 0;
+	if (igrach.x - init_x>0) { k = 1; }
+	if (igrach.x - init_x<0) { k = -1; }
+	if (igrach.y - init_y>0) { k2 = 1; }
+	if (igrach.y - init_y<0) { k2 = -1; }
+	igrach.x = igrach.x + (-1)*(k);
+	igrach.y = igrach.y + (-1)*(k2);
+}
+void playercheckhit(int& init_x, int& init_y) {
+	if (if_hit()) return;
+	playernothit(init_x, init_y);
+	return playercheckhit(init_x, init_y);
+}
 void player_command()
 {
     if(igrach.life<=0)
@@ -201,35 +217,8 @@ void player_command()
     }
 	playercheckhit(init_x, init_y);
 }
-void playercheckhit(int& init_x,int& init_y) {
-	if (if_hit()) return;
-	playernothit(init_x, init_y);
-	return playercheckhit(init_x, init_y);
-}
-void playernothit(int& init_x,int& init_y) {
-	int k = 0;
-	int k2 = 0;
-	if (igrach.x - init_x>0) { k = 1; }
-	if (igrach.x - init_x<0) { k = -1; }
-	if (igrach.y - init_y>0) { k2 = 1; }
-	if (igrach.y - init_y<0) { k2 = -1; }
-	igrach.x = igrach.x + (-1)*(k);
-	igrach.y = igrach.y + (-1)*(k2);
-}
 
-void gravity()
-{
-    int init_x=igrach.x;
-    int init_y=igrach.y;
-    igrach.y+=3;
-	gravitycheckhit(init_x, init_y);
-}
-void gravitycheckhit(int& init_x, int& init_y) {
-	if (if_hit()) return;
-	gravitynothit(init_x, init_y);
-	return gravitycheckhit(init_x, init_y);
-}
-void gravitynothit(int& init_x,int& init_y) {
+void gravitynothit(int& init_x, int& init_y) {
 	int k = 0;
 	int k2 = 0;
 	if (igrach.x - init_x>0) { k = 1; }
@@ -245,8 +234,39 @@ void gravitynothit(int& init_x,int& init_y) {
 	jump = "ok";
 	how_much = 0;
 }
+void gravitycheckhit(int& init_x, int& init_y) {
+	if (if_hit()) return;
+	gravitynothit(init_x, init_y);
+	return gravitycheckhit(init_x, init_y);
+}
+void gravity()
+{
+    int init_x=igrach.x;
+    int init_y=igrach.y;
+    igrach.y+=3;
+	gravitycheckhit(init_x, init_y);
+}
 
-
+void jumpnothit(int& init_x, int& init_y) {
+	int k = 0;
+	int k2 = 0;
+	if (igrach.x - init_x>0) { k = 1; }
+	if (igrach.x - init_x<0) { k = -1; }
+	if (igrach.y - init_y>0) { k2 = 1; }
+	if (igrach.y - init_y<0) { k2 = -2; }
+	igrach.x = igrach.x + (-1)*(k);
+	igrach.y = igrach.y + (-1)*(k2);
+	if (jump == "no" || jump == "no2")
+	{
+		cooldown = 150;
+	}
+	how_much = 0;
+}
+void jumpcheckhit(int& init_x, int& init_y) {
+	if (if_hit()) return;
+	jumpnothit(init_x, init_y);
+	return jumpcheckhit(init_x, init_y);
+}
 void jumping()
 {
     int init_x=igrach.x;
@@ -263,60 +283,14 @@ void jumping()
     }
 	jumpcheckhit(init_x,init_y);
 }
-void jumpcheckhit(int& init_x,int& init_y) {
-	if (if_hit()) return;
-	jumpnothit(init_x, init_y);
-	return jumpcheckhit(init_x, init_y);
-}
-void jumpnothit(int& init_x,int& init_y) {
-	int k = 0;
-	int k2 = 0;
-	if (igrach.x - init_x>0) { k = 1; }
-	if (igrach.x - init_x<0) { k = -1; }
-	if (igrach.y - init_y>0) { k2 = 1; }
-	if (igrach.y - init_y<0) { k2 = -2; }
-	igrach.x = igrach.x + (-1)*(k);
-	igrach.y = igrach.y + (-1)*(k2);
-	if (jump == "no" || jump == "no2")
-	{
-		cooldown = 150;
-	}
-	how_much = 0;
-}
 
-void mrudni()
-{
-    vector<RenderedEntity*>Platforms;
-    if(imam.Up_Down_ima==true) {Platforms=GetOfType(Entities,EntityType::Up_Down_type);}
-    vector<RenderedEntity*>k;
-    if(imam.Left_Right_ima==true) {k=GetOfType(Entities,EntityType::Left_Right_type);}
-	insertplatforms(k, Platforms, 0);
-	platformsloopcheck(0, Platforms);
-}
-void platformsloopcheck(int i,vector<RenderedEntity*>& Platforms) {
-	if (i == Platforms.size()) return;
-	if (igrach.x<Platforms[i]->x + 20 && igrach.x>Platforms[i]->x - igrach.sizee 
-		&& igrach.y<Platforms[i]->y && igrach.y>Platforms[i]->y - igrach.sizee - 1)
-	{
-		int init_x = igrach.x;
-		int init_y = igrach.y;
-		igrach.y += Platforms[i]->nakude_y;
-		igrach.x += Platforms[i]->nakude_x;
-		platformcheckhit(init_x, init_y);
-	}
-	int g = Get_Position(Entities, Platforms[i]->type, Platforms[i]->x, Platforms[i]->y);
-	Platforms[i]->y += Platforms[i]->nakude_y;
-	Platforms[i]->x += Platforms[i]->nakude_x;
-	platformhit(Platforms, i,g);
-	return platformsloopcheck(i + 1, Platforms);
-}
-void platformhit(vector<RenderedEntity*>& Platforms,int& i,int& g) {
+void platformhit(vector<RenderedEntity*>& Platforms, int& i, int& g) {
 	if (if_hitfor(0, Entities.size(), Platforms[i]->x, Platforms[i]->y, g, Platforms[i]->type))return;
 	Platforms[i]->y -= Platforms[i]->nakude_y;
 	Platforms[i]->nakude_y *= -1;
 	Platforms[i]->x -= Platforms[i]->nakude_x;
 	Platforms[i]->nakude_x *= -1;
-	return platformhit(Platforms, i,g);
+	return platformhit(Platforms, i, g);
 }
 void platformnothit(int& init_x, int& init_y) {
 	int k = 0;
@@ -333,12 +307,56 @@ void platformcheckhit(int& init_x, int& init_y) {
 	platformnothit(init_x, init_y);
 	return platformcheckhit(init_x, init_y);
 }
-void insertplatforms(vector<RenderedEntity*>& source, vector<RenderedEntity*> Platforms,int index) {
+void platformsloopcheck(int i, vector<RenderedEntity*>& Platforms) {
+	if (i == Platforms.size()) return;
+	if (igrach.x<Platforms[i]->x + 20 && igrach.x>Platforms[i]->x - igrach.sizee
+		&& igrach.y<Platforms[i]->y && igrach.y>Platforms[i]->y - igrach.sizee - 1)
+	{
+		int init_x = igrach.x;
+		int init_y = igrach.y;
+		igrach.y += Platforms[i]->nakude_y;
+		igrach.x += Platforms[i]->nakude_x;
+		platformcheckhit(init_x, init_y);
+	}
+	int g = Get_Position(Entities, Platforms[i]->type, Platforms[i]->x, Platforms[i]->y);
+	Platforms[i]->y += Platforms[i]->nakude_y;
+	Platforms[i]->x += Platforms[i]->nakude_x;
+	platformhit(Platforms, i, g);
+	return platformsloopcheck(i + 1, Platforms);
+}
+void insertplatforms(vector<RenderedEntity*>& source, vector<RenderedEntity*> Platforms, int index) {
 	if (index == source.size()) return;
 	Platforms.push_back(source[index]);
-	return insertplatforms(source, Platforms, index+1);
+	return insertplatforms(source, Platforms, index + 1);
+}
+void mrudni()
+{
+    vector<RenderedEntity*>Platforms;
+    if(imam.Up_Down_ima==true) {Platforms=GetOfType(Entities,EntityType::Up_Down_type);}
+    vector<RenderedEntity*>k;
+    if(imam.Left_Right_ima==true) {k=GetOfType(Entities,EntityType::Left_Right_type);}
+	insertplatforms(k, Platforms, 0);
+	platformsloopcheck(0, Platforms);
 }
 
+
+
+
+
+bool bulletcheck(int i, int sizee, int x, int y, int k) {
+	if (Entities[i]->type == EntityType::Waypoint_type) return true;
+	if (x<Entities[i]->x + 20 && x>Entities[i]->x - sizee && y<Entities[i]->y + 20 && y>Entities[i]->y - sizee)
+	{
+		if (Entities[i]->type != EntityType::Turret_x_type && Entities[i]->type != EntityType::Turret_y_type)  return false;
+		if (Entities[i]->type == EntityType::Turret_x_type && k != i)  return false;
+		if (Entities[i]->type == EntityType::Turret_y_type && k != i)  return false;
+	}
+}
+bool bulletfor(int i, int end, int& sizee, int& x, int& y, int& k) {
+	if (i == end) return true;
+	if (bulletcheck(i, sizee, x, y, k)) return true;
+	return bulletfor(i + 1, end, sizee, x, y, k);
+}
 bool if_hit_bullets(int x,int y,int k,int sizee)
 {
 	if (!bulletfor(0, Entities.size(), sizee, x, y, k)) return false;
@@ -349,34 +367,9 @@ bool if_hit_bullets(int x,int y,int k,int sizee)
     }
     return true;
 }
-bool bulletfor(int i,int end,int& sizee,int& x,int& y,int& k) {
-	if (i == end) return true;
-	if (bulletcheck(i, sizee, x, y, k)) return true;
-	return bulletfor(i + 1, end, sizee, x, y, k);
-}
-bool bulletcheck(int i,int sizee,int x,int y,int k) {
-	if (Entities[i]->type == EntityType::Waypoint_type) return true;
-	if (x<Entities[i]->x + 20 && x>Entities[i]->x - sizee && y<Entities[i]->y + 20 && y>Entities[i]->y - sizee)
-	{
-		if (Entities[i]->type != EntityType::Turret_x_type && Entities[i]->type != EntityType::Turret_y_type)  return false; 
-		if (Entities[i]->type == EntityType::Turret_x_type && k != i)  return false; 
-		if (Entities[i]->type == EntityType::Turret_y_type && k != i)  return false; 
-	}
-}
 
-void shooting()
-{
-    vector<RenderedEntity*> Turrets_x;
-    if(imam.Turret_x_ima==true) {Turrets_x=GetOfType(Entities,EntityType::Turret_x_type);}
-	xturretsfor(0, Turrets_x);
-    vector<RenderedEntity*> Turrets_y;
-    if(imam.Turret_y_ima==true) {Turrets_y=GetOfType(Entities,EntityType::Turret_y_type);}
-	yturretsfor(0, Turrets_y);
-    int kolko=Bullets.size();
-	Bullet k;
-	bulletfor(0, kolko, k);
-}
-void bulletfor(int i, int end,Bullet& k) {
+
+void bulletfor(int i, int end, Bullet& k) {
 	if (i == end) return;
 	k = Bullets.front();
 	Bullets.pop();
@@ -386,7 +379,7 @@ void bulletfor(int i, int end,Bullet& k) {
 	{
 		Bullets.push(k);
 	}
-	return bulletfor(i + 1, end,k);
+	return bulletfor(i + 1, end, k);
 }
 void yturretsfor(int i, vector<RenderedEntity*>& Turrets_y) {
 	if (i == Turrets_y.size()) return;
@@ -397,9 +390,9 @@ void yturretsfor(int i, vector<RenderedEntity*>& Turrets_y) {
 		Turrets_y[i]->cooldown = Turrets_y[i]->kolko_da_e_cooldowna;
 		Turrets_y[i]->nakude *= -1;
 	}
-	return xturretsfor(i + 1, Turrets_y);
+	return yturretsfor(i + 1, Turrets_y);
 }
-void xturretsfor(int i,vector<RenderedEntity*>& Turrets_x) {
+void xturretsfor(int i, vector<RenderedEntity*>& Turrets_x) {
 	if (i == Turrets_x.size()) return;
 	if (Turrets_x[i]->cooldown == 0)
 	{
@@ -413,46 +406,59 @@ void xturretsfor(int i,vector<RenderedEntity*>& Turrets_x) {
 
 void bombing(int i)
 {
-        if(Entities[i]->cooldown==0)
-        {
-           if(if_hitfor(0,Entities.size(),Entities[i]->x,Entities[i]->y,Get_Position(Entities,EntityType::Bomb_type,Entities[i]->x,Entities[i]->y), EntityType::Bomb_type))
-            {
-                Entities[i]->visited=0;
-            }
-        }
-        if(Entities[i]->fuse==0)
-        {
-            Entities[i]->visited=1;
-            Entities[i]->cooldown=Entities[i]->kolko_da_e_cooldowna;
-            if(Bomb_map[Entities[i]->getX()][Entities[i]->getY()+1]!=0 && Entities[Bomb_map[Entities[i]->getX()][Entities[i]->getY()+1]]->visited==0)
-            {
-                Entities[Bomb_map[Entities[i]->getX()][Entities[i]->getY()+1]]->fuse=200;
-            }
-            if(Bomb_map[Entities[i]->getX()][Entities[i]->getY()-1]!=0 && Entities[Bomb_map[Entities[i]->getX()][Entities[i]->getY()-1]]->visited==0)
-            {
-                Entities[Bomb_map[Entities[i]->getX()][Entities[i]->getY()-1]]->fuse=200;
-            }
-            if(Bomb_map[Entities[i]->getX()+1][Entities[i]->getY()]!=0 && Entities[Bomb_map[Entities[i]->getX()+1][Entities[i]->getY()]]->visited==0)
-            {
-                Entities[Bomb_map[Entities[i]->getX()+1][Entities[i]->getY()]]->fuse=200;
-            }
-            if(Bomb_map[Entities[i]->getX()-1][Entities[i]->getY()]!=0 && Entities[Bomb_map[Entities[i]->getX()-1][Entities[i]->getY()]]->visited==0)
-            {
-                Entities[Bomb_map[Entities[i]->getX()-1][Entities[i]->getY()]]->fuse=200;
-            }
-        }
-        if(Entities[i]->fuse>-10)
-        {
-            Entities[i]->fuse-=10;
-        }
+	if (Entities[i]->cooldown == 0)
+	{
+		if (if_hitfor(0, Entities.size(), Entities[i]->x, Entities[i]->y, Get_Position(Entities, EntityType::Bomb_type, Entities[i]->x, Entities[i]->y), EntityType::Bomb_type))
+		{
+			Entities[i]->visited = 0;
+		}
+	}
+	if (Entities[i]->fuse == 0)
+	{
+		Entities[i]->visited = 1;
+		Entities[i]->cooldown = Entities[i]->kolko_da_e_cooldowna;
+		if (Bomb_map[Entities[i]->getX()][Entities[i]->getY() + 1] != 0 && Entities[Bomb_map[Entities[i]->getX()][Entities[i]->getY() + 1]]->visited == 0)
+		{
+			Entities[Bomb_map[Entities[i]->getX()][Entities[i]->getY() + 1]]->fuse = 200;
+		}
+		if (Bomb_map[Entities[i]->getX()][Entities[i]->getY() - 1] != 0 && Entities[Bomb_map[Entities[i]->getX()][Entities[i]->getY() - 1]]->visited == 0)
+		{
+			Entities[Bomb_map[Entities[i]->getX()][Entities[i]->getY() - 1]]->fuse = 200;
+		}
+		if (Bomb_map[Entities[i]->getX() + 1][Entities[i]->getY()] != 0 && Entities[Bomb_map[Entities[i]->getX() + 1][Entities[i]->getY()]]->visited == 0)
+		{
+			Entities[Bomb_map[Entities[i]->getX() + 1][Entities[i]->getY()]]->fuse = 200;
+		}
+		if (Bomb_map[Entities[i]->getX() - 1][Entities[i]->getY()] != 0 && Entities[Bomb_map[Entities[i]->getX() - 1][Entities[i]->getY()]]->visited == 0)
+		{
+			Entities[Bomb_map[Entities[i]->getX() - 1][Entities[i]->getY()]]->fuse = 200;
+		}
+	}
+	if (Entities[i]->fuse>-10)
+	{
+		Entities[i]->fuse -= 10;
+	}
 }
-void updates()
+void shooting()
 {
-	updateentities(0, Entities.size());
+    vector<RenderedEntity*> Turrets_x;
+    if(imam.Turret_x_ima==true) {Turrets_x=GetOfType(Entities,EntityType::Turret_x_type);}
+	xturretsfor(0, Turrets_x);
+    vector<RenderedEntity*> Turrets_y;
+    if(imam.Turret_y_ima==true) {Turrets_y=GetOfType(Entities,EntityType::Turret_y_type);}
+	yturretsfor(0, Turrets_y);
+    int kolko=Bullets.size();
 	Bullet k;
-	updatebullets(0, k);
+	bulletfor(0, kolko, k);
 }
-void updatebullets(int start,Bullet& k) {
+
+void updateentities(int start, int end) {
+	if (start == end) return;
+	Entities[start]->Update(window);
+	if (Entities[start]->type == EntityType::Bomb_type) bombing(start);
+	return updateentities(start + 1, end);
+}
+void updatebullets(int start, Bullet& k) {
 	if (start == Bullets.size()) return;
 	k = Bullets.front();
 	Bullets.pop();
@@ -460,11 +466,11 @@ void updatebullets(int start,Bullet& k) {
 	Bullets.push(k);
 	return updatebullets(start, k);
 }
-void updateentities(int start,int end){
-	if (start == end) return;
-	Entities[start]->Update(window);
-	if (Entities[start]->type == EntityType::Bomb_type) bombing(start); 
-	return updateentities(start + 1, end);
+void updates()
+{
+	updateentities(0, Entities.size());
+	Bullet k;
+	updatebullets(0, k);
 }
 
 void poll(Event& event) {
