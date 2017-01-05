@@ -222,10 +222,7 @@ void gravity()
     int init_x=igrach.x;
     int init_y=igrach.y;
     igrach.y+=3;
-    while(!if_hit())
-    {
-		gravitynothit(init_x, init_y);
-    }
+	gravitycheckhit(init_x, init_y);
 }
 void gravitycheckhit(int& init_x, int& init_y) {
 	if (if_hit()) return;
@@ -457,7 +454,7 @@ void updates()
 }
 void updatebullets(int start,Bullet& k) {
 	if (start == Bullets.size()) return;
-	Bullet k = Bullets.front();
+	k = Bullets.front();
 	Bullets.pop();
 	k.Update(window);
 	Bullets.push(k);
@@ -470,53 +467,15 @@ void updateentities(int start,int end){
 	return updateentities(start + 1, end);
 }
 
-int main()
-{
-    Clock clock;
-    Time elapsed1 = clock.getElapsedTime();
-    Left_Right k(1,1,1);
-    cout<<sizeof(k);
-    initialize();
-    window.close();
-    window.create(VideoMode(1000,600),"BattleBlock");
-    View view;
-    view.setCenter(Vector2f(350, 300));
-    view.setSize(Vector2f(250, 150));
-    Bombi=GetOfType(Entities,Bomb_type);
-    while (window.isOpen())
-    {
-        view.setCenter(Vector2f(igrach.x, igrach.y));
-        window.setView(view);
-        Event event;
-        while (window.pollEvent(event))
-           {
-               if (event.type == Event::Closed)
-                   window.close();
-           }
-        window.clear();
-        updates();
-        draw_board();
-        mrudni();
-        shooting();
-        gravity();
-        player_command();
-        jumping();
-        window.display();
-        elapsed1=clock.getElapsedTime();
-        Sleep(10);
-        clock.restart();
-        if(cooldown>0)
-        {
-            cooldown-=10;
-        }
-        if(cooldown2>0)
-        {
-            cooldown2-=10;
-        }
-    }
-    return 0;
+void poll(Event& event) {
+	if (window.pollEvent(event)) {
+		if (event.type == Event::Closed)
+			window.close();
+		return;
+	}
+	return poll(event);
 }
-void windowCheck(View& view,Clock& clock,Time& elapsed1) {
+void windowCheck(View& view, Clock& clock, Time& elapsed1) {
 	if (!window.isOpen()) return;
 	view.setCenter(Vector2f(igrach.x, igrach.y));
 	window.setView(view);
@@ -542,13 +501,23 @@ void windowCheck(View& view,Clock& clock,Time& elapsed1) {
 	{
 		cooldown2 -= 10;
 	}
-	return windowCheck(view,clock,elapsed1);
+	return windowCheck(view, clock, elapsed1);
 }
-void poll(Event& event) {
-	if (window.pollEvent(event)) {
-		if (event.type == Event::Closed)
-			window.close();
-		return;
-	}
-	return poll(event);
+
+int main()
+{
+    Clock clock;
+    Time elapsed1 = clock.getElapsedTime();
+    Left_Right k(1,1,1);
+    cout<<sizeof(k);
+    initialize();
+    window.close();
+    window.create(VideoMode(1000,600),"BattleBlock");
+    View view;
+    view.setCenter(Vector2f(350, 300));
+    view.setSize(Vector2f(250, 150));
+    Bombi=GetOfType(Entities,Bomb_type);
+	windowCheck(view, clock, elapsed1);
+    return 0;
 }
+
